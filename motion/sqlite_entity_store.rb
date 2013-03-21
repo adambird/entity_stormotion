@@ -14,8 +14,7 @@ class SqliteEntityStore
   end
 
   def get_entity(id)
-      # returns the entity as an empty shell of the appropriate type
-      # if a snapshot exists then this should be returned
+    Object.new
   end
 
   def get_events(id, since_version=nil)

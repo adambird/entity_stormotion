@@ -1,0 +1,3 @@
+[submodule "motion/entity_store"]
+	path = motion/entity_store
+	url = git@github.com:adambird/entity_store.git
