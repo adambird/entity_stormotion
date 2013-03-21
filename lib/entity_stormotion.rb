@@ -6,8 +6,11 @@ ENTITY_STORE_FILES.each do |file_name|
   BW.require "motion/entity_store/lib/entity_store/#{file_name}.rb"
 end
 
-BW.require "motion/sqlite_entity_store.rb"
+GEM_FILES = %w(sqlite_entity_store)
 
+GEM_FILES.each do |file_name|
+  BW.require "motion/#{file_name}.rb"
+end
 
 module EntityStormotion
 

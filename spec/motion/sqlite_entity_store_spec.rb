@@ -23,6 +23,7 @@ end
 describe "SqliteEntityStore" do
   before do
     @store = SqliteEntityStore.new
+    @store.init
     @name = "asjdlakjdlkajd"
   end
 
@@ -31,6 +32,7 @@ describe "SqliteEntityStore" do
       @entity = DummyEntity.new
       @entity.set_name @name
       @id = @store.add_entity @entity
+      p "add_entity : #{@id}"
     end
 
     it "should return the entity shell for the id" do
