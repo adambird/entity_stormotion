@@ -2,6 +2,8 @@
 
 class SqliteEntityStore
 
+  # Public - setter for the name of the filename to use for the store
+  # 
   def self.store_name=(value)
     @_store_name = value
   end
@@ -22,21 +24,30 @@ class SqliteEntityStore
 
   # Public - adds the entity to the store
   #
-  # entity     - An object that behaves an entity, use the EntityStore::Entity mixin
+  # entity      - An object that behaves as an EntityStore::Entity (see mixin)
   #
   # Returns String id of the entity
   def add_entity(entity)
-    insert_entity = "INSERT INTO entities(type, version) VALUES (\"#{entity.type}\", #{entity.version});"
+    sql = "INSERT INTO entities(type, version) VALUES (:type, :version);"
     new_id = nil
     use_store do |db|
-      db.executeUpdate(insert_entity)
+      db.executeUpdate(sql, withParameterDictionary:{ type: entity.type, version: entity.version })
       new_id = db.lastInsertRowId
     end
     new_id.to_s
   end
 
+  # Public - saves the entity 
+  # 
+  # entity      - An object that behaves as an EntityStore::Entity (see mixin)
+  # 
+  # Returns nothing
   def save_entity(entity)
-    # this will be called if the entity has an id
+    update_entity_sql = "UPDATE entities SET version = :version WHERE id = :id"
+
+    use_store do |db|
+      db.executeUpdate(update_entity_sql, withParameterDictionary:{ version: entity.version, id: entity.id.to_i})
+    end
   end
 
   # Public - retrieves the entity attributes and returns an empty instance
@@ -46,49 +57,119 @@ class SqliteEntityStore
   # 
   # Returns an instance of the entity
   def get_entity(id)
-    get_entity = "SELECT id, type, version FROM entities WHERE id = #{id}"
+    get_entity_sql = "SELECT id, type, version, snapshot FROM entities WHERE id = :id"
 
     attrs = nil
 
     use_store do |db|
-      result = db.executeQuery(get_entity)
+      result = db.executeQuery(get_entity_sql, withParameterDictionary:{ id: id.to_i })
       if result.next && result.intForColumn('id')
         attrs = {
           id: id,
           version: result.intForColumn('version'),
           type: result.stringForColumn('type')
         }
+        if snapshot = result.UTF8StringForColumnName('snapshot')
+          attrs.merge BW::JSON.parse(snapshot)
+        end
       end
     end
     return EntityStore::Config.load_type(attrs[:type]).new(attrs) if attrs
   end
 
-  def get_events(id, since_version=nil)
-    # returns all events in time sequence since the version if passed otherwise all
+  # Public - adds an event to the store
+  # 
+  # event           - An object that behaves as an EntityStore::Event (see mixin)
+  # 
+  # Returns nothing
+  def add_event(event)
+    insert_event_sql = "INSERT INTO entity_events (type, entity_id, attributes) VALUES (:type, :entity_id, :attributes);"
+
+    attributes = BW::JSON.generate(event.attributes)
+
+    use_store do |db|
+      db.executeUpdate(insert_event_sql, withParameterDictionary:{ type: event.class.name, entity_id: event.entity_id, attributes: attributes })
+    end
   end
 
+  # Public - returns all events in time sequence since the version if passed otherwise all
+  #
+  # entity_id       - String id of the entity
+  # since_version   - Fixnum version of the entity
+  #
+  # Returns Array of event objects
+  def get_events(entity_id, since_version=nil)
+    events = []
+
+    get_events_sql = "SELECT type, attributes FROM entity_events WHERE entity_id = :entity_id ORDER BY id;"
+
+    use_store do |db|
+      results = db.executeQuery(get_events_sql, withParameterDictionary:{ entity_id: entity_id.to_i })
+      while results.next do
+        # attributes = results.UTF8StringForColumnName('attributes')
+        attributes_hash = BW::JSON.parse results.UTF8StringForColumnName('attributes')
+        events << EntityStore::Config.load_type(results.stringForColumn('type')).new(attributes_hash)
+      end
+    end
+
+    events
+  end
+
+  # Public - create a snapshot of an entity. Assumes the entity has
+  # already been added to the store
+  # 
+  # entity        -  An object that behaves as an EntityStore::Entity (see mixin)
   def snapshot_entity(entity)
-    # create a snapshot of the entity that can be retrievd without replaying 
-    # the entire event stream
+    sql = "UPDATE entities SET snapshot = :snapshot WHERE id = :id;"
+
+    attributes = BW::JSON.generate entity.attributes
+
+    use_store do |db|
+      db.executeUpdate(sql, attributes, withParameterDictionary:{ id: entity.id.to_i, snapshot: attributes })
+    end
   end
 
+  # Public - removes the snapshot of an entity
+  # 
+  # id            - String id of entity
+  #
+  # Returns nothing
   def remove_entity_snapshot(id)
-    # remove the snapshot so next time the entity is retrieved it replays the event stream
-    # to rehhydrate the entity
+    sql = "UPDATE entities SET snapshot = NULL WHERE id = :id;"
+
+    use_store do |db|
+      db.executeUpdate(sql, withParameterDictionary:{ id: id.to_i })
+    end
   end
 
   # Public - idempotent init operation for the data store for generating any schema
   #
   def init
-    create_entity_table = "CREATE TABLE IF NOT EXISTS entities "\
-        "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, version INTEGER NOT NULL);"
+    create_entity_table_sql = "CREATE TABLE IF NOT EXISTS entities "\
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
+        "version INTEGER NOT NULL, snapshot BLOB NULL);"
+
+    create_events_table_sql = "CREATE TABLE IF NOT EXISTS entity_events "\
+        "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
+        "entity_id TEXT NOT NULL, attributes BLOB NOT NULL);"
 
     use_store do |db|
-      db.executeUpdate(create_entity_table)
+      db.executeUpdate(create_entity_table_sql)
+      db.executeUpdate(create_events_table_sql)
     end
   end
 
   def clear
+    use_store do |db|
+      db.executeUpdate("DELETE FROM entities;")
+      db.executeUpdate("DELETE FROM entity_events;")
+    end
+  end
 
+  def drop
+    use_store do |db|
+      db.executeUpdate("DROP TABLE entities;")
+      db.executeUpdate("DROP TABLE entity_events;")
+    end
   end
 end

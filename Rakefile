@@ -13,6 +13,7 @@ Motion::Project::App.setup do |app|
   app.specs_dir = './spec/motion'
   app.version = EntityStormotion::VERSION
   app.pods do
-    dependency 'FMDB'
+    pod 'FMDB'
+    pod 'JSONKit'
   end
 end
