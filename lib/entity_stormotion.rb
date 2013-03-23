@@ -1,4 +1,4 @@
-require "entity_stormotion/version"
+require 'entity_stormotion/version'
 
 ENTITY_STORE_FILES = %w(logging config entity entity_value event store event_data_object event_bus not_found hash_serialization attributes)
 
