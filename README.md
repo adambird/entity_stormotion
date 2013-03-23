@@ -1,6 +1,6 @@
 # EntityStormotion
 
-TODO: Write a gem description
+Provides a RubyMotion wrapper for the [entity_store](http://github.com/adambird/entity_store.git)
 
 ## Installation
 

@@ -70,10 +70,11 @@ class SqliteEntityStore
           type: result.stringForColumn('type')
         }
         if snapshot = result.UTF8StringForColumnName('snapshot')
-          attrs.merge BW::JSON.parse(snapshot)
+          attrs = attrs.merge(BW::JSON.parse(snapshot))
         end
       end
     end
+
     return EntityStore::Config.load_type(attrs[:type]).new(attrs) if attrs
   end
 
@@ -106,7 +107,6 @@ class SqliteEntityStore
     use_store do |db|
       results = db.executeQuery(get_events_sql, withParameterDictionary:{ entity_id: entity_id.to_i })
       while results.next do
-        # attributes = results.UTF8StringForColumnName('attributes')
         attributes_hash = BW::JSON.parse results.UTF8StringForColumnName('attributes')
         events << EntityStore::Config.load_type(results.stringForColumn('type')).new(attributes_hash)
       end
@@ -125,7 +125,7 @@ class SqliteEntityStore
     attributes = BW::JSON.generate entity.attributes
 
     use_store do |db|
-      db.executeUpdate(sql, attributes, withParameterDictionary:{ id: entity.id.to_i, snapshot: attributes })
+      db.executeUpdate(sql, withParameterDictionary:{ id: entity.id.to_i, snapshot: attributes })
     end
   end
 

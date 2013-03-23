@@ -54,4 +54,17 @@ describe "SqliteEntityStore" do
       @store.get_events(@entity_id).first.class.name.should == DummyEntityNameSet.name
     end
   end
+
+  describe "#snapshot_entity" do
+    before do
+      @entity = DummyEntity.new
+      @entity.set_name @name
+      @entity.id = @store.add_entity @entity
+      @store.snapshot_entity @entity
+    end
+
+    it "should populate the entity with the snapshot" do
+      @store.get_entity(@entity.id).name.should == @name
+    end
+  end
 end
