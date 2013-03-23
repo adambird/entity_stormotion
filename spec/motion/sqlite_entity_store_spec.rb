@@ -23,7 +23,7 @@ end
 describe "SqliteEntityStore" do
   before do
     @store = SqliteEntityStore.new
-    @store.drop
+    @store.open
     @store.init
     @name = "asjdlakjdlkajd"
   end
@@ -65,6 +65,28 @@ describe "SqliteEntityStore" do
 
     it "should populate the entity with the snapshot" do
       @store.get_entity(@entity.id).name.should == @name
+    end
+  end
+
+  describe "Integration with EntityStore" do
+    before do
+      EntityStore::Config.setup do |config|
+        config.store = @store
+      end
+      @entity = DummyEntity.new
+      @entity_store = EntityStore::Store.new
+    end
+
+    describe "#save" do
+      before do
+        @entity.set_name(@name = "sdhfsfhof")
+        @entity = @entity_store.save(@entity)
+      end
+
+      it "awaiting update to bacon http://hipbyte.myjetbrains.com/youtrack/issue/RM-37"
+      # it "retrieved has name" do
+      #   @entity_store.get(@entity.id).name.should == @name
+      # end
     end
   end
 end

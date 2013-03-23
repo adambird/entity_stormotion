@@ -53,10 +53,11 @@ class SqliteEntityStore
   # Public - retrieves the entity attributes and returns an empty instance
   # of the appropriate type
   # 
-  # id          - String identifying the entity
+  # id                - String identifying the entity
+  # raise_exception   - raise an exception if not found default(false)
   # 
   # Returns an instance of the entity
-  def get_entity(id)
+  def get_entity(id, raise_exception=false)
     get_entity_sql = "SELECT id, type, version, snapshot FROM entities WHERE id = :id"
 
     attrs = nil
@@ -144,7 +145,7 @@ class SqliteEntityStore
 
   # Public - idempotent init operation for the data store for generating any schema
   #
-  def init
+  def open
     create_entity_table_sql = "CREATE TABLE IF NOT EXISTS entities "\
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
         "version INTEGER NOT NULL, snapshot BLOB NULL);"
