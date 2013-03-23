@@ -75,7 +75,6 @@ class SqliteEntityStore
         end
       end
     end
-
     return EntityStore::Config.load_type(attrs[:type]).new(attrs) if attrs
   end
 
@@ -112,7 +111,6 @@ class SqliteEntityStore
         events << EntityStore::Config.load_type(results.stringForColumn('type')).new(attributes_hash)
       end
     end
-
     events
   end
 
@@ -150,9 +148,9 @@ class SqliteEntityStore
         "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
         "version INTEGER NOT NULL, snapshot BLOB NULL);"
 
-    create_events_table_sql = "CREATE TABLE IF NOT EXISTS entity_events "\
-        "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
-        "entity_id TEXT NOT NULL, attributes BLOB NOT NULL);"
+      create_events_table_sql = "CREATE TABLE IF NOT EXISTS entity_events "\
+          "(id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, "\
+          "entity_id TEXT NOT NULL, attributes BLOB NOT NULL);"
 
     use_store do |db|
       db.executeUpdate(create_entity_table_sql)
