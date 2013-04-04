@@ -83,10 +83,9 @@ describe "SqliteEntityStore" do
         @entity = @entity_store.save(@entity)
       end
 
-      it "awaiting update to bacon http://hipbyte.myjetbrains.com/youtrack/issue/RM-37"
-      # it "retrieved has name" do
-      #   @entity_store.get(@entity.id).name.should == @name
-      # end
+      it "retrieved has name" do
+        @entity_store.get(@entity.id).name.should == @name
+      end
     end
   end
 end

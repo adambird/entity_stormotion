@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
 gem 'bubble-wrap'
-gem 'motion-cocoapods'
+gem 'motion-cocoapods', '1.3.0.rc1'
 # Specify your gem's dependencies in entity_stormotion.gemspec
 gemspec
