@@ -5,15 +5,17 @@ class DummyEntity
 
   attr_accessor :name
 
-  def set_name(name)
-    record_event DummyEntityNameSet.new(name: name)
+  def set_name(at, name)
+    record_event DummyEntityNameSet.new(at: at, name: name)
   end
+
 end
 
 class DummyEntityNameSet
   include EntityStore::Event
 
   attr_accessor :name
+  time_attribute :at
 
   def apply(entity)
     entity.name = name
@@ -22,16 +24,17 @@ end
 
 describe "SqliteEntityStore" do
   before do
-    @store = SqliteEntityStore.new
+    @store = EntityStormotion::SqliteEntityStore.new
     @store.open
-    @store.init
+    @store.clear
     @name = "asjdlakjdlkajd"
+    @at = Time.now
   end
 
   describe "#add_entity" do
     before do
       @entity = DummyEntity.new
-      @entity.set_name @name
+      @entity.set_name @at, @name
       @id = @store.add_entity @entity
     end
 
@@ -43,7 +46,7 @@ describe "SqliteEntityStore" do
   describe "#add_event" do
     before do
       @entity_id = "2234"
-      @event = DummyEntityNameSet.new(name: "skdfhskjf", entity_id: @entity_id, entity_version: 2)
+      @event = DummyEntityNameSet.new(at: Time.now, name: "skdfhskjf", entity_id: @entity_id, entity_version: 2)
       @store.add_event @event
     end
 
@@ -58,7 +61,7 @@ describe "SqliteEntityStore" do
   describe "#snapshot_entity" do
     before do
       @entity = DummyEntity.new
-      @entity.set_name @name
+      @entity.set_name @at, @name
       @entity.id = @store.add_entity @entity
       @store.snapshot_entity @entity
     end
@@ -79,7 +82,7 @@ describe "SqliteEntityStore" do
 
     describe "#save" do
       before do
-        @entity.set_name(@name = "sdhfsfhof")
+        @entity.set_name(@at = Time.now, @name = "sdhfsfhof")
         @entity = @entity_store.save(@entity)
       end
 

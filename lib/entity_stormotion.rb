@@ -6,12 +6,9 @@ ENTITY_STORE_FILES.each do |file_name|
   BW.require "entity_store/lib/entity_store/#{file_name}.rb"
 end
 
-GEM_FILES = %w(sqlite_entity_store hash_serialization)
+GEM_FILES = %w(sqlite_entity_store hash_serialization config time_factory)
 
 GEM_FILES.each do |file_name|
   BW.require "motion/#{file_name}.rb"
 end
 
-module EntityStormotion
-
-end
