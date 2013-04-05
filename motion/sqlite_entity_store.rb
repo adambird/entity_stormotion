@@ -75,6 +75,7 @@ module EntityStormotion
             attrs = attrs.merge(BW::JSON.parse(snapshot))
           end
         end
+        result.close
       end
       return EntityStore::Config.load_type(attrs[:type]).new(attrs) if attrs
     end
@@ -111,6 +112,7 @@ module EntityStormotion
           attributes_hash = BW::JSON.parse results.UTF8StringForColumnName('attributes')
           events << EntityStore::Config.load_type(results.stringForColumn('type')).new(attributes_hash)
         end
+        results.close
       end
       events
     end
@@ -176,7 +178,7 @@ module EntityStormotion
   private
 
     # Private: performs any data type conversions to support a successfully
-    # serialisation as json. 
+    # serialisation as json. This is very naive but serves current needs
     #
     # - Times are converted to string
     #
