@@ -2,6 +2,8 @@
 
 Provides a RubyMotion wrapper for the [entity_store](http://github.com/adambird/entity_store.git)
 
+[![endorse](https://api.coderwall.com/adambird/endorsecount.png)](https://coderwall.com/adambird)
+
 ## Installation
 
 Add this line to your application's Gemfile:
